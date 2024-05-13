@@ -31,7 +31,7 @@ class network_simplex():
                i += 1
        return x
     
-    def get_dual(self, edge, start_node):
+    def get_dual(self, edge):
         # 计算对偶变量f和g
         f = np.zeros([self.n])
         g = np.zeros([self.m])
@@ -40,37 +40,42 @@ class network_simplex():
         f_near_dict = [] # 记录f的邻接节点
         g_near_dict = []
         
-        f[start_node] = 0
-        f_flag[start_node] = 1
-        
-        for j in range(self.m):
-            if edge[start_node, j] == 1:
-                f_near_dict.append([start_node, j])
-                
-        while len(f_near_dict)!=0 or len(g_near_dict)!=0:
-            if len(f_near_dict)!=0: # 遍历f的邻接节点,计算g
-                for element in f_near_dict:
-                    start_node = element[0]
-                    item = element[1]
-                    g_flag[item] = 1
-                    g[item] = self.cost_matrix[start_node, item] - f[start_node]
-                    # 更新g的邻接节点
-                    for i in range(self.n):
-                        if f_flag[i] == 0 and edge[i, item] == 1:
-                            g_near_dict.append([item, i])
-                f_near_dict = []
-                
-            else:
-                for element in g_near_dict:
-                    start_node = element[0]
-                    item = element[1]
-                    f_flag[item] = 1
-                    f[item] = self.cost_matrix[item, start_node] - g[start_node]
-                    # 更新f的邻接节点
-                    for j in range(self.m):
-                        if g_flag[j] == 0 and edge[item, j] == 1:
-                            f_near_dict.append([item, j])
-                g_near_dict = []
+        for start_node in range(self.n):
+            if f_flag[start_node] == 1:
+                continue
+            if np.sum(edge[start_node, :]) == 0:
+                continue
+            f[start_node] = 0 
+            f_flag[start_node] = 1 
+            
+            for j in range(self.m):
+                if edge[start_node, j] == 1:
+                    f_near_dict.append([start_node, j])
+                    
+            while len(f_near_dict)!=0 or len(g_near_dict)!=0:
+                if len(f_near_dict)!=0: # 遍历f的邻接节点,计算g
+                    for element in f_near_dict:
+                        start_node = element[0]
+                        item = element[1]
+                        g_flag[item] = 1
+                        g[item] = self.cost_matrix[start_node, item] - f[start_node]
+                        # 更新g的邻接节点
+                        for i in range(self.n):
+                            if f_flag[i] == 0 and edge[i, item] == 1:
+                                g_near_dict.append([item, i])
+                    f_near_dict = []
+                    
+                else:
+                    for element in g_near_dict:
+                        start_node = element[0]
+                        item = element[1]
+                        f_flag[item] = 1
+                        f[item] = self.cost_matrix[item, start_node] - g[start_node]
+                        # 更新f的邻接节点
+                        for j in range(self.m):
+                            if g_flag[j] == 0 and edge[item, j] == 1:
+                                f_near_dict.append([item, j])
+                    g_near_dict = []
         return f, g 
     
     # 深度优先搜索
@@ -123,20 +128,9 @@ class network_simplex():
                             edge[i, j] = 1
                         else:
                             edge[i, j] = 0
-            # 找到计算对偶变量的起始节点
-            start_node = 0
-            flag_start = False  
-            for i in range(self.n):
-                for j in range(self.m):
-                    if edge[i, j] == 1:
-                        start_node = i
-                        flag_start = True
-                        break
-                if flag_start:
-                    break
                 
             # 计算对偶变量
-            f, g = self.get_dual(edge, start_node)
+            f, g = self.get_dual(edge)
             # 找到第一个违反对偶约束条件的节点
             violate_pair_list = []
             violate_num = 0
@@ -149,7 +143,6 @@ class network_simplex():
                 print(f"最优传输方案：{P}")
                 break
             
-            updata_flag = False
             violate_pair = violate_pair_list[0]
             # 加入两个violate节点
             edge[violate_pair[0], violate_pair[1]] = 1
