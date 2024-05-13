@@ -37,8 +37,6 @@ class network_simplex():
         g = np.zeros([self.m])
         f_flag = np.zeros([self.n]) # 标记f是否已经计算
         g_flag = np.zeros([self.m])
-        f_near_dict = [] # 记录f的邻接节点
-        g_near_dict = []
         
         for start_node in range(self.n):
             if f_flag[start_node] == 1:
@@ -47,6 +45,9 @@ class network_simplex():
                 continue
             f[start_node] = 0 
             f_flag[start_node] = 1 
+            
+            f_near_dict = [] # 记录f的邻接节点
+            g_near_dict = []
             
             for j in range(self.m):
                 if edge[start_node, j] == 1:
