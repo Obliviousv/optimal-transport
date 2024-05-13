@@ -43,11 +43,12 @@ class network_simplex():
                 continue
             if np.sum(edge[start_node, :]) == 0:
                 continue
-            f[start_node] = 0 
-            f_flag[start_node] = 1 
             
             f_near_dict = [] # 记录f的邻接节点
             g_near_dict = []
+            
+            f[start_node] = 0 
+            f_flag[start_node] = 1 
             
             for j in range(self.m):
                 if edge[start_node, j] == 1:
